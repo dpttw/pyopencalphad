@@ -164,7 +164,7 @@ contains
 ! get system component names. At present the elements
     implicit none
     integer n                               ! EXIT: number of components
-    character*24, dimension(*) :: compnames ! EXIT: names of components
+    character(len=2), dimension(*) :: compnames ! EXIT: names of components
     type(gtp_equilibrium_data), pointer :: ceq  !IN: current equilibrium
 !\end{verbatim}
     integer iz

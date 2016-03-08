@@ -13,6 +13,7 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
   type(gtp_equilibrium_data), pointer :: ceq
 !  integer, parameter :: maxc=20,maxp=100  ! according to liboctq.F90
 
+
 ! ============================ inputs
 ! call_func is which service
 ! int_var is an integer argument
@@ -28,35 +29,35 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
 ! ============================ outputs
   integer, intent(out):: int_out(100)
   real(8), intent(out):: double_out(100)
-  character(Len=*), intent(out):: char_out(100)
+  character(Len=24), intent(out):: char_out(100)
 
 
+  integer:: i,j,k,ierr,nc
+  integer:: string_index(2)
+  integer:: local_int(2)
+  real(8):: local_double(2)
+  character(Len=256):: local_char
 
-  integer i,j,k,ierr,nc
-  
+  character(Len=256):: filename
+
 ! ============================ ini
   integer:: idum  ! dummy variable
 
-! ============================ rfil
-  character(Len=256):: filename
-
 ! ============================ gcom
   integer:: no_el
-  character(Len=24):: cnames(maxc)
+  character(Len=24):: phasenames(maxp)
+  character(Len=2):: elenames(maxc)
 
-! ============================ gnp
-!  integer:: np
+! ============================ gnp, gpn
+  integer:: np  ! #phase
 
+  integer:: cond(100) 
 
 !  double precision localv
-!  real(8):: npf(maxp)
+  real(8):: npf(maxp)
   save ceq
 
   ierr=0
-
-!print*, size(int_var),size(double_var)  !,size(char_var)
-!print*, char_var
-!print*, "len:  ",len_trim(call_func)
 
   if(call_func(1:2) == 'tq') then
     call_func = trim(call_func(3:len_trim(call_func)))
@@ -69,29 +70,66 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
 
     case default
        ierr=7777
-
+!-------------------------------------------
     case('ini') ! initiate
       idum=20
       call tqini(idum,ceq)
       if(gx%bmperr.ne.0) goto 900
-
+!-------------------------------------------
     case('rfil') ! read tdbfile
-      filename=' '
-      filename=trim(char_var)
-      call tqrfil(filename,ceq)
+      local_char=' '
+      local_char=trim(char_var)
+      call tqrfil(local_char,ceq)
+
+      if(gx%bmperr.ne.0) goto 900
+!-------------------------------------------
+    case('rpfil') ! read tdbfile & select element
+      local_int(1) = int_var(1)
+      local_char=' '
+      local_char=trim(char_var)
+
+      string_index(1)=SCAN(local_char,' ')
+      string_index(2)=len(local_char) 
+
+      filename=local_char(1:string_index(1))
+      string_index(1)=string_index(1)+1
+      string_index(2)=string_index(1)+SCAN(local_char(string_index(1):),' ')-1
+
+      i=1
+      do while(string_index(1)<string_index(2) )
+        elenames(i)=trim(local_char(string_index(1):string_index(2)))
+
+        i=i+1
+
+        string_index(1)=string_index(2)+1 
+        string_index(2)=string_index(1)+SCAN(local_char(string_index(1):),' ')-1
+      end do
+
+      call tqrpfil(filename,local_int(1),elenames,ceq)
+
+      if(gx%bmperr.ne.0) goto 900
+!-------------------------------------------
+    case('phsts') ! set phase status
+      local_int(1)=int_var(1)
+      local_int(2)=int_var(2)
+      local_double(1)=double_var(1)
+      call tqphsts(local_int(1),local_int(2),local_double(1),ceq)
 
       if(gx%bmperr.ne.0) goto 900
 
+!-------------------------------------------
     case('gcom') ! number of components and their names
-!      no_el=0
-!      call tqgcom(no_el,cnames,ceq)
-!      if(gx%bmperr.ne.0) goto 900
+      no_el=0
+      call tqgcom(no_el,elenames,ceq)
+      if(gx%bmperr.ne.0) goto 900
 
-      int_out(1)=nel
+      
+
+      int_out(1)=no_el      !also equal to nel
       do i=1,no_el
-        char_out(i)=cnames(i)(1:len_trim(cnames(i)))
+        char_out(i)=elenames(i)(1:len_trim(elenames(i)))
       end do
-
+!-------------------------------------------
     case('gnp') ! number of phase tuples, stored in ntup
 !      call tqgnp(np,ceq)
 !      if(gx%bmperr.ne.0) goto 900
@@ -101,68 +139,75 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
 
 !-------------------------------------------
     case('gpn') ! list name of phase
-      cnames(1)=' '
-      nc=ntup+1
-      call tqgpn(nc,cnames(1),ceq)
+      phasenames(1)=' '
+
+      do i=1,ntup
+        call tqgpn(i,phasenames(i),ceq)
+        if(gx%bmperr.ne.0) goto 900
+
+        char_out(i)=phasenames(i)(1:len_trim(phasenames(i)))
+      end do
+
+!-------------------------------------------
+    case('gpi') ! get phase index
+      local_char=' '
+      local_char=trim(char_var)
+
+      do i=1,ntup
+        call tqgpi(local_int(1),local_char,ceq)
+        if(gx%bmperr.ne.0) goto 900
+
+        char_out(i)=phasenames(i)(1:len_trim(phasenames(i)))
+      end do
+
+      int_out(1)=local_int(1)
+
+!-------------------------------------------
+    case('setc') ! set condition
+      local_char=char_var(1:len_trim(char_var))
+      local_double(1)=double_var(1)
+      i=int_var(1)
+      j=int_var(2)
+
+      call tqsetc(local_char,i,j,local_double(1),cond(1),ceq)
       if(gx%bmperr.ne.0) goto 900
 
-      j=len_trim(cnames(1))
-!     write(*,*)'Name of phase ',nc,': ',cnames(1),j
-      do k=1,j
-        tv(k)=ichar(cnames(1)(k:k))
-      enddo
-!     write(*,*)'First letter: ',char(tv(1))
+!-------------------------------------------
+    case('ce') ! calculate equilibrium
+      i=int_var(1)    ! i=0 means call grid minimizer
+      j=int_var(2)
+      local_char=' '
+      local_double(1)=0.
+      call tqce(local_char,i,j,local_double(1),ceq)
+      if(gx%bmperr.ne.0) goto 900
 
-      tv(j+1)=0
 !-------------------------------------------
-!  case('setc') ! set condition
-!     filename=' '
-!     tochar2: do i=1,len(filename)
-!        if(tv(i).eq.0) exit tochar2
-!        filename(i:i)=char(tv(i))
-!     enddo tochar2
-!     i=iv
-!     j=0
-!     localv=rv
-!!     write(*,*)'CASE 6; ',filename(1:len_trim(filename)),i,localv
-!     call tqsetc(filename,i,j,localv,cnum(1),ceq)
-!     if(gx%bmperr.ne.0) goto 900
-!-------------------------------------------
-!  case('ce') ! calculate equilibrium
-!! i=0 means call grid minimizer
-!     i=0
-!     j=0
-!     filename=' '
-!     localv=0
-!     call tqce(filename,i,j,localv,ceq)
-!     if(gx%bmperr.ne.0) goto 900
-!-------------------------------------------
-!  case('getv') ! get value
-!     filename=' '
-!     tochar3: do i=1,len(filename)
-!        if(tv(i).eq.0) exit tochar3
-!        filename(i:i)=char(tv(i))
-!     enddo tochar3
-!     i=iv
-!     j=0
-!     k=size(npf)
-!     call tqgetv(filename,i,j,k,npf,ceq)
-!     if(gx%bmperr.ne.0) goto 900
-!     rv=npf(1)
+    case('getv') ! get value
+      local_char=' '
+      local_char=trim(char_var)
+
+      i=int_var(1)
+      j=int_var(2)
+      k=size(npf)
+      call tqgetv(local_char,i,j,k,npf,ceq)
+      if(gx%bmperr.ne.0) goto 900
+
+      double_out=npf
 !--------------------------------------------
-!  case('reset') ! reset error vcode
-!     gx%bmperr=0
-  end select
+    case('reset') ! reset error vcode
+      gx%bmperr=0
+    end select
 
   goto 1000
 ! If there is an error I terminate here as I do not know how to do it in C
+
 900 continue
   write(*,*)'Error code ',gx%bmperr,' for call ',call_func
   ierr=gx%bmperr
   stop
-!
+
 1000 continue
   pytq=ierr
   return
 end function pytq
-!
+
