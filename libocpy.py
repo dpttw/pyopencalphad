@@ -82,9 +82,12 @@ def tqgpi(phase):
 
 # ============= set conditions
 def tqsetc(condition,element,value):
-	if condition == 'X':
-		element += 1
-	dum, int_out, doub_out, char_out = ptq('tqsetc',element,value,condition)
+	element_index = 0
+	if type(element) is str:
+		element_index = get_element_index(element)
+		if element_index == -5:
+			return None
+	dum, int_out, doub_out, char_out = ptq('tqsetc',element_index,value,condition)
 	return None
 
 # ============= eq calculation
