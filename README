@@ -1,6 +1,3 @@
-# file system
-in order to use Makefile, the folders must be namede and located in pre=defined location:
-/oc
-   /tq
-
-/main_folder
+INSTALLATION
+(1) make getoc
+(2) make interface
