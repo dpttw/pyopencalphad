@@ -1,19 +1,20 @@
 # PyOC
-python interface for OC: liboctqpy.f90 and libocpy.py
+python interface for OC: liboctqpy.f90 and libocpy.py<br>
 
-REQUIREMENT
-F2PY
+REQUIRE: <br>
+F2PY <br>
 
 
-INSTALLATION
-(1) make getoc
+INSTALLATION <br>
+(1) make getoc <br>
 (2) make interface
 
 
-TEST
-ipython notebook
-OCpy_example.ipynb
-  required for testing
-    matplotlib
-    pycalphad 0.3.2
-    
+TEST <br>
+ipython notebook <br>
+OCpy_example.ipynb <br>
+
+required for testing: <br>
+matplotlib <br>
+pycalphad 0.3.2
+
