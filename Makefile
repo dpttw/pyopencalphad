@@ -3,19 +3,26 @@ path2=tqfunc.F90
 path3=tqfunc_prog.F90
 
 all:
-	mpirun -np 10 python paoc.py
+	mpirun -np 10 python paraexam.py
 
 single:
 	clear
 	gfortran -fPIC -o $(path1) $(path3) liboctq.o liboceq.a
 	./$(path1)
 
+getoc:
+	git clone https://github.com/sundmanbo/opencalphad.git ../oc
+	cd ../oc && git checkout -b pyoc 0c28b3f
+	cp Makefileoc ../oc/Makefile
+	cd ../oc && make
+	cp ../oc/liboceq.a ../oc/liboceqplus.mod .
+	gfortran -c -fPIC liboctq.F90
+
 oc:
 	clear
 	cd ../oc && make clean
 	cd ../oc && make
 	cp ../oc/liboceq.a ../oc/liboceqplus.mod .
-	cp ../oc/tq/liboctq.F90 .
 	gfortran -c -fPIC liboctq.F90
 
 interface:

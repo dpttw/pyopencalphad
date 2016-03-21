@@ -63,7 +63,8 @@ def tqphsts(phase,status,value):
 # ============= get composition
 def tqgcom():
 	dum, int_out, doub_out, char_out = ptq('tqgcom',0,1.,' ')
-	return "".join(char_out).split()
+	elem = ["".join(char_out[i]).split()[0] for i in range(int_out[0])]
+	return elem
 
 # ============= get # phase
 def tqgnp():
@@ -73,7 +74,8 @@ def tqgnp():
 # ============= get phase name
 def tqgpn():
 	dum, int_out, doub_out, char_out = ptq('tqgpn',0,1.,' ')
-	return "".join(char_out).split()
+	phase = ["".join(char_out[i]).split()[0] for i in range(int_out[0])]
+	return phase
 
 # ============= get phase index
 def tqgpi(phase):
@@ -87,6 +89,7 @@ def tqsetc(condition,element,value):
 		element_index = get_element_index(element)
 		if element_index == -5:
 			return None
+	#print "element",element,element_index 
 	dum, int_out, doub_out, char_out = ptq('tqsetc',element_index,value,condition)
 	return None
 
@@ -105,7 +108,7 @@ def tqgetv(condition,phase,element):
 	element_index = get_element_index(element)
 	if element_index == -5:
 		return None
-
+	#print "phase",phase,phase_index,"    element:",element,element_index
 	i_var = [phase_index,element_index]
 	dum, int_out, doub_out, char_out = ptq('tqgetv',i_var,0.,condition)
 	return doub_out[0]

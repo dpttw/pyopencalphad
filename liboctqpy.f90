@@ -29,8 +29,14 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
 ! ============================ outputs
   integer, intent(out):: int_out(100)
   real(8), intent(out):: double_out(100)
-  character(Len=24), intent(out):: char_out(100)
-
+  character*24, intent(out):: char_out(100)
+! f2py has specific way to recognize string
+!     character(LEN=24):: xx(100)  => fortran: 24*100 - py: len(xx)=100*1
+!     character*24:: xx(100)  => fortran: 24*100 - py: len(xx)=100*24
+!     character:: xx(100)*24 => fortran: 1*100 - py: len(xx)=100*24
+!     character:: XX(100) => fortran: 1*100 - py: len(xx)=100*1
+!     character*24:: XX => no need to test it, I need 100 
+! ============================
 
   integer:: i,j,k,ierr,nc
   integer:: string_index(2)
@@ -123,8 +129,6 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
       call tqgcom(no_el,elenames,ceq)
       if(gx%bmperr.ne.0) goto 900
 
-      
-
       int_out(1)=no_el      !also equal to nel
       do i=1,no_el
         char_out(i)=elenames(i)(1:len_trim(elenames(i)))
@@ -140,7 +144,7 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
 !-------------------------------------------
     case('gpn') ! list name of phase
       phasenames(1)=' '
-
+      int_out(1)=ntup
       do i=1,ntup
         call tqgpn(i,phasenames(i),ceq)
         if(gx%bmperr.ne.0) goto 900
