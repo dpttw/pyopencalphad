@@ -13,7 +13,6 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
   type(gtp_equilibrium_data), pointer :: ceq
 !  integer, parameter :: maxc=20,maxp=100  ! according to liboctq.F90
 
-
 ! ============================ inputs
 ! call_func is which service
 ! int_var is an integer argument
@@ -27,9 +26,9 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
   character(Len=*):: char_var
 
 ! ============================ outputs
-  integer, intent(out):: int_out(100)
-  real(8), intent(out):: double_out(100)
-  character*24, intent(out):: char_out(100)
+  integer, intent(out):: int_out(800)
+  real(8), intent(out):: double_out(800)
+  character*24, intent(out):: char_out(800)
 ! f2py has specific way to recognize string
 !     character(LEN=24):: xx(100)  => fortran: 24*100 - py: len(xx)=100*1
 !     character*24:: xx(100)  => fortran: 24*100 - py: len(xx)=100*24
@@ -57,10 +56,10 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
 ! ============================ gnp, gpn
   integer:: np  ! #phase
 
-  integer:: cond(100) 
+  integer:: cond(800) 
 
 !  double precision localv
-  real(8):: npf(maxp)
+  real(8):: npf(800)
   save ceq
 
   ierr=0
@@ -106,7 +105,6 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
         elenames(i)=trim(local_char(string_index(1):string_index(2)))
 
         i=i+1
-
         string_index(1)=string_index(2)+1 
         string_index(2)=string_index(1)+SCAN(local_char(string_index(1):),' ')-1
       end do

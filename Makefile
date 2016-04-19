@@ -12,12 +12,12 @@ single:
 
 getoc:
 	git clone https://github.com/sundmanbo/opencalphad.git ../oc
-	cd ../oc && git checkout -b pyoc 0c28b3f
+	cd ../oc && git checkout -b pyoc
 	cp Makefileoc ../oc/Makefile
 	cd ../oc && make
-	cp ../oc/liboceq.a ../oc/liboceqplus.mod .
-	gfortran -c -fPIC liboctq.F90
-	f2py -c --fcompiler=gnu95 --f90flags=-fPIC liboctq.o liboceq.a -m liboctqpy liboctqpy.f90
+	cp ../oc/liboceq.a ../oc/liboceqplus.mod
+#	gfortran -c -fPIC liboctq.F90
+#	f2py -c --fcompiler=gnu95 --f90flags=-fPIC liboctq.o liboceq.a -m liboctqpy liboctqpy.f90
 
 oc:
 	clear
@@ -27,6 +27,7 @@ oc:
 	gfortran -c -fPIC liboctq.F90
 
 interface:
+	gfortran -c -fPIC liboctq.F90
 	f2py -c --fcompiler=gnu95 --f90flags=-fPIC liboctq.o liboceq.a -m liboctqpy liboctqpy.f90
 	#gfortran -shared -O2 liboctqpy.f90 -o liboctqpy.so -fPIC
 	#gfortran -c -fPIC liboctqpy.so liboctqpy.f90	

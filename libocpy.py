@@ -30,6 +30,7 @@ def tqrpfil(filename,elements):
 		print "=== Composition inputs error ==="
 		return None
 
+	print "py",no_element,1.0,file_ele
 	ptq('tqrpfil',no_element,1.0,file_ele)
 
 	return None
