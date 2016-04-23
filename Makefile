@@ -12,10 +12,10 @@ single:
 
 getoc:
 	git clone https://github.com/sundmanbo/opencalphad.git ../oc
-	cd ../oc && git checkout -b pyoc
+	cd ../oc && git checkout -b version3-final origin/version3-final
 	cp Makefileoc ../oc/Makefile
 	cd ../oc && make
-	cp ../oc/liboceq.a ../oc/liboceqplus.mod
+	cp ../oc/liboceq.a ../oc/liboceqplus.mod .
 
 oc:
 	clear
