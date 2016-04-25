@@ -155,12 +155,12 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
       local_char=' '
       local_char=trim(char_var)
 
-      do i=1,ntup
+      !do i=1,ntup
         call tqgpi(local_int(1),local_char,ceq)
         if(gx%bmperr.ne.0) goto 900
 
-        char_out(i)=phasenames(i)(1:len_trim(phasenames(i)))
-      end do
+        !char_out(i)=phasenames(i)(1:len_trim(phasenames(i)))
+      !end do
 
       int_out(1)=local_int(1)
 

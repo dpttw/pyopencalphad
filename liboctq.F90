@@ -364,7 +364,7 @@ contains
           if(gx%bmperr.ne.0) goto 1000
        enddo
     elseif(tup.le.ntup) then
-       call change_phase_status(phcs(tup)%phaseix,phcs(tup)%compset,&
+       call change_phase_status(tup,phcs(tup)%compset,&
             newstat,val,ceq)
     else
        write(*,*)'Illegal phase tuple index'
@@ -665,7 +665,14 @@ contains
 ! it can be for example compositions, then it should be number of components
           call sortinphtup(n3,1,values)
        else
-          call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+! ------------------------------ bug, SY 04-24-2016
+! cannot get correct phase name by phase index
+!          call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+          call get_phasetup_name(n1,name)
+!          call get_phase_name(n1,phcs(n1)%compset,name)
           if(gx%bmperr.ne.0) goto 1000
           statevar='NP('//name(1:len_trim(name))//') '
           call get_state_var_value(statevar,values(1),encoded,ceq)
@@ -729,7 +736,8 @@ contains
           endif
        elseif(n2.lt.0) then
 ! this means all components in one phase
-          call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+!          call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+          call get_phasetup_name(n1,name)
           if(gx%bmperr.ne.0) goto 1000
 ! added for composition sets
 !          if(ics.gt.1) then
@@ -740,10 +748,12 @@ contains
           call get_many_svar(statevar,values,mjj,n3,encoded,ceq)
        else
 ! one component (n2) of one phase (n1)
-          call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+!          call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+          call get_phasetup_name(n1,name)
           if(gx%bmperr.ne.0) goto 1000
           statevar=stavar(1:1)//'('//name(1:len_trim(name))//','
           call get_component_name(n2,name,ceq)
+
           if(gx%bmperr.ne.0) goto 1000
           statevar(len_trim(statevar)+1:)=name(1:len_trim(name))//') '
 !          write(*,*)'tqgetv 8: ',statevar
@@ -761,7 +771,8 @@ contains
        endif
        if(n1.gt.0) then
 ! Volume for a specific phase
-          call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+!          call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+          call get_phasetup_name(n1,name)
           if(gx%bmperr.ne.0) goto 1000
           statevar=statevar(1:ki)//'('//name(1:len_trim(name))//') '
 !          call get_state_var_value(statevar,values(ics),encoded,ceq)
@@ -786,7 +797,8 @@ contains
 !       write(*,*)'tqgetv 1: ',n1,ki
        if(n1.gt.0) then
 ! Gibbs energy for a specific phase
-          call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+!          call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+          call get_phasetup_name(n1,name)
           if(gx%bmperr.ne.0) goto 1000
           statevar=statevar(1:ki)//'('//name(1:len_trim(name))//') '
 !          write(*,*)'tqgetv 3: ',statevar
@@ -811,7 +823,8 @@ contains
 !       write(*,*)'tqgetv 1: ',n1,ki
        if(n1.gt.0) then
 ! Gibbs energy for a specific phase
-          call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+!          call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+          call get_phasetup_name(n1,name)
           if(gx%bmperr.ne.0) goto 1000
           statevar=statevar(1:ki)//'('//name(1:len_trim(name))//') '
 !          write(*,*)'tqgetv 3: ',statevar
@@ -825,7 +838,8 @@ contains
 !--------------------------------------------------------------------
 ! Mobilities
     case('MQ   ')
-       call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+!       call get_phase_name(phcs(n1)%phaseix,phcs(n1)%compset,name)
+       call get_phasetup_name(n1,name)
        if(gx%bmperr.ne.0) goto 1000
        statevar=stavar(1:len_trim(stavar))//'('//name(1:len_trim(name))//')'
 !       write(*,*)'statevar: ',statevar

@@ -80,7 +80,7 @@ def tqgpn():
 # ============= get phase index
 def tqgpi(phase):
 	dum, int_out, doub_out, char_out = ptq('tqgpi',0,1.,phase)
-	return int_out[0]-1
+	return int_out[0]
 
 # ============= set conditions
 def tqsetc(condition,element,value):
@@ -109,8 +109,10 @@ def tqgetv(condition,phase,element):
 	if element_index == -5:
 		return None
 	#print "phase",phase,phase_index,"    element:",element,element_index
+	#print "phase index: ",phase_index
 	i_var = [phase_index,element_index]
 	dum, int_out, doub_out, char_out = ptq('tqgetv',i_var,0.,condition)
+	#print doub_out
 	return doub_out[0]
 
 # ============= reset errors
@@ -123,6 +125,7 @@ def tqrseterr():
 def get_phase_index(phase):
 	no_phase = tqgnp()
 	phase_names = tqgpn()
+	#print "py",phase_names,len(phase_names)
 
 	phase_index = -5
 	if phase[0].lower() == "*":
@@ -136,7 +139,10 @@ def get_phase_index(phase):
 					break
 			'''
 			full_name = [fn for fn in phase_names if phase in fn]
-			phase_index = phase_names.index(full_name[0]) + 1
+			#print "PY:  ",full_name
+			if full_name:
+				phase_index = phase_names.index(full_name[0]) + 1
+				#print full_name,phase_index
 		else:
 			print "ERROR: incorrect phase name"	
 
@@ -149,7 +155,9 @@ def get_phase_index(phase):
 def get_element_index(element):
 	ele_names = tqgcom()
 	element_index = -5
-	if type(element) is str:
+	if element.upper() == "*":
+		element_index = -1
+	elif type(element) is str:
 		if element.upper() == "NA":
 			element_index = -1
 		else:
