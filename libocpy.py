@@ -60,7 +60,7 @@ def tqphsts(phase,status,value):
 	ptq('tqphsts',phase_prop,value,' ')
 	return None
 
-# ============= get composition
+# ============= get composition name
 def tqgcom():
 	dum, int_out, doub_out, char_out = ptq('tqgcom',0,1.,' ')
 	elem = ["".join(char_out[i]).split()[0] for i in range(int_out[0])]
@@ -89,7 +89,7 @@ def tqsetc(condition,element,value):
 		element_index = get_element_index(element)
 		if element_index == -5:
 			return None
-	#print "element",element,element_index 
+	print "element",element,element_index 
 	dum, int_out, doub_out, char_out = ptq('tqsetc',element_index,value,condition)
 	return None
 
@@ -114,6 +114,63 @@ def tqgetv(condition,phase,element):
 	dum, int_out, doub_out, char_out = ptq('tqgetv',i_var,0.,condition)
 	#print doub_out
 	return doub_out[0]
+
+# ============= retrive the sublattice information
+# input: phase name
+# output: 
+#    no_sublattice           - number of sublattice
+#    no_component_sublattice - number of component in each sublattice
+#    ele_names               - component names in each sublattice
+#    composition             - composition of component in each sublattice
+#    no_sites_sublattice     - number of sites in each sublattice
+#    moles_atom              - mole atoms of this phase
+#    net_charge              - net charge of the phase
+# 
+def tqgphc(phase):
+	# phase name to phase index
+	phase_index = get_phase_index(phase)
+	if phase_index == -5:
+		return None
+
+	i_var = phase_index
+	dum, int_out, doub_out, char_out = ptq('tqgphc',i_var,0.,' ')
+
+	no_sublattice = int_out[0]
+	#print no_sublattice
+	no_component_sublattice = int_out[1:1+no_sublattice]
+	#print no_component_sublattice
+
+
+	count_index = 0
+	element_index = []
+	composition = []
+	for i in range(no_sublattice):
+		element_index.append(int_out[count_index+1+no_sublattice:count_index+1+no_sublattice+no_component_sublattice[i]])
+		composition.append(list(doub_out[count_index:count_index+no_component_sublattice[i]]))
+		count_index = count_index+no_component_sublattice[i]
+
+	#print composition
+	#print element_index
+
+	element_index[:] = [x - 1 for x in element_index]
+	#print element_index
+
+	sys_ele_names = tqgcom()
+	sys_ele_names.insert(0,'VA')
+	#print sys_ele_names
+
+	ele_names = [[sys_ele_names[i] for i in element_index[j]] for j in range(no_sublattice)]
+	#print ele_names 
+
+	no_sites_sublattice = doub_out[count_index:count_index+no_sublattice]
+	#print no_sites_sublattice
+
+	moles_atom = doub_out[count_index+no_sublattice]
+	net_charge = doub_out[count_index+no_sublattice+1]
+	#print moles_atom,net_charge
+
+	
+	return (no_sublattice,no_component_sublattice,ele_names,composition,no_sites_sublattice,moles_atom,net_charge)
 
 # ============= reset errors
 def tqrseterr():
@@ -161,12 +218,6 @@ def get_element_index(element):
 		if element.upper() == "NA":
 			element_index = -1
 		else:
-			'''
-			for i in range(len(ele_names)):
-				if ele_names[i].find(element.upper()) == 0:
-					element_index = i + 1
-					break
-			'''
 			full_name = [fn for fn in ele_names if element in fn]
 			element_index = ele_names.index(full_name[0]) + 1
 	else:

@@ -1,3 +1,9 @@
+! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+! ------------------------------ bug, SY 04-29-2016
+! cannot get correct phase name by phase tuple index
+!      phcs(n1)%phaseix
+! -->  n1
+! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 !
 ! Minimal TQ interface.
 !
@@ -873,7 +879,7 @@ contains
 ! n1 is phase tuple index
 ! nsub is the number of sublattices (1 if no sublattices)
 ! cinsub is an array with the number of constítuents in each sublattice
-! spix is an array with the species index of the constituents in all sublattices
+! spix is an array with the species location (not index) of the constituents in all sublattices
 ! sites is an array of the site ratios for all sublattices.  
 ! yfrac is the constituent fractions in same order as in spix
 ! extra is an array with some extra values: 
@@ -882,10 +888,19 @@ contains
     implicit none
     integer n1,nsub,cinsub(*),spix(*)
     double precision sites(*),yfrac(*),extra(*)
+    character name*2
     type(gtp_equilibrium_data), pointer :: ceq
 !\end{verbatim}
-    call get_phase_data(phcs(n1)%phaseix,phcs(n1)%compset,&
+
+! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+! ------------------------------ SY 04-29-2016
+!    call get_phase_data(phcs(n1)%phaseix,phcs(n1)%compset,&  !gtp3A.F90
+!         nsub,cinsub,spix,yfrac,sites,extra,ceq)
+! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+    call get_phase_data(n1,phcs(n1)%compset,&      !gtp3A.F90
          nsub,cinsub,spix,yfrac,sites,extra,ceq)
+
 1000 continue
     return
   end subroutine tqgphc1
