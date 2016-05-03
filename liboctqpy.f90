@@ -61,9 +61,12 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
   real(8):: no_sites(maxp)
   real(8):: extra_info(2)
 
+! ============================ gdif
+  real(8):: molar_frac(maxc),chem_pot(maxc*maxp)
+  real(8):: thermo_factor(maxc*maxp),mob(maxc)
+
 ! ============================ gnp, gpn
   integer:: np  ! #phase
-
   integer:: cond(800) 
 
 !  double precision localv
@@ -242,6 +245,19 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
 !print*, "extra",extra_info
 !print*, int_out(1:1+no_sublatice+nc)
 !print*, double_out(1:nc+no_sublatice+2)
+
+!-------------------------------------------
+    case('gdif')
+      local_int(1)=size(double_var)
+
+!print*, local_int(1)
+!print*, "GDIF",double_var(1),double_var(2)
+!print*, double_var(3:local_int(1))
+
+      call tqgdif(double_var(1),double_var(2),double_var(3:local_int(1)),chem_pot,ceq) !,chem_pot,local_int(2),thermo_factor,mob,ceq)
+!print*, "lib  ",nend
+
+
 
 !--------------------------------------------
     case('reset') ! reset error vcode

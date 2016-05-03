@@ -99,7 +99,7 @@ contains
 ! This call initiates the OC package
     call init_gtp(intv,dblv)
     ceq=>firsteq
-    write(*,*)'tqini created: ',ceq%eqname
+!    write(*,*)'tqini created: ',ceq%eqname
 1000 continue
     return
   end subroutine tqini
@@ -510,7 +510,7 @@ contains
 ! Target can be empty or a state variable with indices n1 and n2
 ! value is the calculated value of target
     implicit none
-    integer n1,n2,mode
+    integer n1,n2,mode,ii
     character target*(*)
     double precision value
     logical confirm
@@ -641,15 +641,15 @@ contains
 !--------------------------------------------------------------------
 ! chemical potential for a component
     case('MU  ')
-       if(n1.lt.-1 .or. n1.eq.0) then
+       if(n2.lt.-1 .or. n2.eq.0) then
           write(*,*)'tqgetv 17: component number must be positive'
           gx%bmperr=8888; goto 1000
-       elseif(n1 .eq.-1) then
+       elseif(n2 .eq.-1) then
 ! hopefully this returns all composition sets for all phases ... YES!
           statevar='MU(*) '
           call get_many_svar(statevar,values,mjj,n3,encoded,ceq)
-       elseif(n1.le.noel()) then
-          statevar=stavar(1:2)//'('//cnam(n1)(1:len_trim(cnam(n1)))//') '
+       elseif(n2.le.noel()) then
+          statevar=stavar(1:2)//'('//cnam(n2)(1:len_trim(cnam(n2)))//') '
 !       write(*,*)'tqgetv 4: ',statevar(1:len_trim(statevar))
 ! we must use index value(1) as the subroutine expect a single variable
           call get_state_var_value(statevar,values(1),encoded,ceq)
@@ -853,7 +853,8 @@ contains
 !--------------------------------------------------------------------
 ! Second derivatives of the Gibbs energy of a phase
     case('D2G   ')
-       call get_phase_compset(phcs(n1)%phaseix,phcs(n1)%compset,lokph,lokcs)
+!       call get_phase_compset(phcs(n1)%phaseix,phcs(n1)%compset,lokph,lokcs)
+       call get_phase_compset(n1,phcs(n1)%compset,lokph,lokcs)
        if(gx%bmperr.ne.0) goto 1000
 !       write(*,*)'D2G 2: ',lokph,lokcs
 ! this gives wrong value!!
@@ -864,12 +865,39 @@ contains
        do ki=1,kj
           values(ki)=ceq%phase_varres(lokcs)%d2gval(ki,1)
        enddo
+
+!--------------------------------------------------------------------
     end select
 !===========================================================================
 1000 continue
     return
   end subroutine tqgetv
+!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\
 
+!@@@@@@@@@@@@@@@@ Diffusivity SY LI, 05022016 @@@@@@@@@@@@@@@@@@@@@@@
+
+!  subroutine tqgdif(T,P,molar_frac,chem_pot,tyst,nend,thermo_factor,mob,ceq)
+  subroutine tqgdif(T,P,molar_frac,chem_pot,ceq) 
+
+    implicit none
+
+    double precision T,P
+
+    integer nend
+    real(8):: TP(2)
+    real(8):: molar_frac(maxc),chem_pot(maxc*maxp),thermo_factor(maxc*maxp),mob(maxc)
+    TYPE(gtp_phasetuple), pointer :: phtup
+    type(gtp_equilibrium_data), pointer :: ceq  !IN: current equilibrium
+
+
+    TP(1)=T
+    TP(2)=P
+print*, TP(1),TP(2)
+    call equilph1d(phtup,TP,molar_frac,chem_pot,.TRUE.,nend,thermo_factor,mob,ceq)
+print*, "tq:  ",nend
+
+    return
+  end subroutine tqgdif
 !\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\!/!!\
 
 !\begin{verbatim}
@@ -888,8 +916,8 @@ contains
     implicit none
     integer n1,nsub,cinsub(*),spix(*)
     double precision sites(*),yfrac(*),extra(*)
-    character name*2
     type(gtp_equilibrium_data), pointer :: ceq
+
 !\end{verbatim}
 
 ! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -923,7 +951,9 @@ contains
     double precision yfra(*),extra(*)
     type(gtp_equilibrium_data), pointer :: ceq
 !\end{verbatim}
-    call set_constitution(phcs(n1)%phaseix,phcs(n1)%compset,&
+!    call set_constitution(phcs(n1)%phaseix,phcs(n1)%compset,&
+!         yfra,extra,ceq)
+    call set_constitution(n1,phcs(n1)%compset,&
          yfra,extra,ceq)
 1000 continue
     return
@@ -971,7 +1001,8 @@ contains
 !    write(*,*)'tqcph1 2',phcs(n1)%phaseix,phcs(n1)%compset
 !----------------------------------------------------------------------
 ! THIS IS NO EQUILIBRIUM, JUST G AND DERIVATIVES FOR CURRENT T, P AND Y
-    call calcg(phcs(n1)%phaseix,phcs(n1)%compset,n2,lokres,ceq)
+!    call calcg(phcs(n1)%phaseix,phcs(n1)%compset,n2,lokres,ceq)
+    call calcg(n1,phcs(n1)%compset,n2,lokres,ceq)
 !----------------------------------------------------------------------
 !    write(*,*)'tqcph1 3A',lokres,gx%bmperr
 ! this should work but gave segmentation fault, find this a more cumbersum way
@@ -1043,7 +1074,8 @@ contains
 !    write(*,*)'tqcph1 2',phcs(n1)%phaseix,phcs(n1)%compset
 !----------------------------------------------------------------------
 ! THIS IS NO EQUILIBRIUM, JUST G AND DERIVATIVES FOR CURRENT T, P AND Y
-    call calcg(phcs(n1)%phaseix,phcs(n1)%compset,n2,lokres,ceq)
+!    call calcg(phcs(n1)%phaseix,phcs(n1)%compset,n2,lokres,ceq)
+    call calcg(n1,phcs(n1)%compset,n2,lokres,ceq)
 !----------------------------------------------------------------------
 !    write(*,*)'tqcph1 3A',lokres,gx%bmperr
 ! this should work but gave segmentation fault, find this a more cumbersum way

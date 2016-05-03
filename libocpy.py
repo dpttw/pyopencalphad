@@ -89,7 +89,7 @@ def tqsetc(condition,element,value):
 		element_index = get_element_index(element)
 		if element_index == -5:
 			return None
-	print "element",element,element_index 
+	#print "element",element,element_index 
 	dum, int_out, doub_out, char_out = ptq('tqsetc',element_index,value,condition)
 	return None
 
@@ -171,6 +171,14 @@ def tqgphc(phase):
 
 	
 	return (no_sublattice,no_component_sublattice,ele_names,composition,no_sites_sublattice,moles_atom,net_charge)
+
+# ============= get diffusion coefficient
+def tqgdif(T,P,X):
+	d_var = T + P + X
+	print "python  ",d_var
+
+	dum, int_out, doub_out, char_out = ptq('tqgdif',0,d_var,' ')
+
 
 # ============= reset errors
 def tqrseterr():

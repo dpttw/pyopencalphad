@@ -23,6 +23,10 @@ oc:
 	cd ../oc && make
 	cp ../oc/liboceq.a ../oc/liboceqplus.mod .
 
+compoc:
+	cd ../oc && make
+	cp ../oc/liboceq.a ../oc/liboceqplus.mod .
+
 interface:
 	gfortran -c -fPIC liboctq.F90
 	f2py -c --fcompiler=gnu95 --f90flags=-fPIC liboctq.o liboceq.a -m liboctqpy liboctqpy.f90
