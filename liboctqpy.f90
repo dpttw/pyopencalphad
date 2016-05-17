@@ -10,6 +10,7 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
 
   implicit none
 
+  
   type(gtp_equilibrium_data), pointer :: ceq
 !  integer, parameter :: maxc=20,maxp=100  ! according to liboctq.F90
 
@@ -64,6 +65,7 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
 ! ============================ gdif
   real(8):: molar_frac(maxc),chem_pot(maxc*maxp)
   real(8):: thermo_factor(maxc*maxp),mob(maxc)
+  real(8):: diffusivity
 
 ! ============================ gnp, gpn
   integer:: np  ! #phase
@@ -254,8 +256,9 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
 !print*, "GDIF",double_var(1),double_var(2)
 !print*, double_var(3:local_int(1))
 
-      call tqgdif(double_var(1),double_var(2),double_var(3:local_int(1)),chem_pot,ceq) !,chem_pot,local_int(2),thermo_factor,mob,ceq)
-!print*, "lib  ",nend
+      call tqgdif(int_var(1),int_var(2),int_var(3),double_var(1),double_var(2),double_var(3:local_int(1)),diffusivity,ceq)
+
+      double_out(1)=diffusivity
 
 
 

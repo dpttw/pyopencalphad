@@ -3,7 +3,7 @@ path2=tqfunc.F90
 path3=tqfunc_prog.F90
 
 all:
-	mpirun -np 10 python paraexam.py
+	mpirun -np 3 python parallel_feni.py
 
 single:
 	clear

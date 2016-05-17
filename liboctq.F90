@@ -81,7 +81,7 @@ module liboctq
   character, dimension(maxc) :: cnam*24
 ! This is for storage and use of phase+composition tuples
   integer ntup
-  type(gtp_phasetuple), dimension(maxp) :: phcs
+  type(gtp_phasetuple), dimension(maxp), target :: phcs
 !
 contains
 !
@@ -876,25 +876,47 @@ contains
 
 !@@@@@@@@@@@@@@@@ Diffusivity SY LI, 05022016 @@@@@@@@@@@@@@@@@@@@@@@
 
-!  subroutine tqgdif(T,P,molar_frac,chem_pot,tyst,nend,thermo_factor,mob,ceq)
-  subroutine tqgdif(T,P,molar_frac,chem_pot,ceq) 
+  subroutine tqgdif(p1,n1,n2,T,P,molar_frac,diffusivity,ceq)
 
     implicit none
 
-    double precision T,P
+    integer:: i,j
+    integer:: p1,n1,n2  ! p1: diffusion phase, n1: diffusion element, n2: dependent element
 
+    double precision T,P
     integer nend
     real(8):: TP(2)
-    real(8):: molar_frac(maxc),chem_pot(maxc*maxp),thermo_factor(maxc*maxp),mob(maxc)
+    real(8):: molar_frac(maxc),chem_pot(maxc),thermo_factor(maxc*maxp),mob(maxc)
+    real(8):: diffusivity
     TYPE(gtp_phasetuple), pointer :: phtup
     type(gtp_equilibrium_data), pointer :: ceq  !IN: current equilibrium
 
 
+    phtup=>phcs(p1)
+
+
     TP(1)=T
     TP(2)=P
-print*, TP(1),TP(2)
     call equilph1d(phtup,TP,molar_frac,chem_pot,.TRUE.,nend,thermo_factor,mob,ceq)
-print*, "tq:  ",nend
+
+print*, T,P,nend
+
+do i=1,3
+print*, "mole fraction",molar_frac(i)
+print*, "chem pot",chem_pot(i)*globaldata%rgas*T
+end do
+
+do i=1,6
+print*, "thermao fac",thermo_factor(i)
+end do
+
+    diffusivity=0d0
+    do i=1,nend 
+      do j=1,nend*nend
+        diffusivity=diffusivity+mob(i)*thermo_factor(j)
+      end do
+    end do
+
 
     return
   end subroutine tqgdif
