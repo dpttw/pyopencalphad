@@ -10,9 +10,9 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
 
   implicit none
 
+  
   type(gtp_equilibrium_data), pointer :: ceq
 !  integer, parameter :: maxc=20,maxp=100  ! according to liboctq.F90
-
 
 ! ============================ inputs
 ! call_func is which service
@@ -27,9 +27,9 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
   character(Len=*):: char_var
 
 ! ============================ outputs
-  integer, intent(out):: int_out(100)
-  real(8), intent(out):: double_out(100)
-  character*24, intent(out):: char_out(100)
+  integer, intent(out):: int_out(800)
+  real(8), intent(out):: double_out(800)
+  character*24, intent(out):: char_out(800)
 ! f2py has specific way to recognize string
 !     character(LEN=24):: xx(100)  => fortran: 24*100 - py: len(xx)=100*1
 !     character*24:: xx(100)  => fortran: 24*100 - py: len(xx)=100*24
@@ -40,7 +40,7 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
 
   integer:: i,j,k,ierr,nc
   integer:: string_index(2)
-  integer:: local_int(2)
+  integer:: local_int(3)
   real(8):: local_double(2)
   character(Len=256):: local_char
 
@@ -54,13 +54,25 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
   character(Len=24):: phasenames(maxp)
   character(Len=2):: elenames(maxc)
 
+! ============================ gphc
+  integer:: no_sublatice
+  integer:: no_ele_sublatice(maxp)
+  integer:: ele_index(maxc*maxp)
+  real(8):: comp_sublatice(maxc*maxp)
+  real(8):: no_sites(maxp)
+  real(8):: extra_info(2)
+
+! ============================ gdif
+  real(8):: molar_frac(maxc),chem_pot(maxc*maxp)
+  real(8):: thermo_factor(maxc*maxp),mob(maxc)
+  real(8):: diffusivity
+
 ! ============================ gnp, gpn
   integer:: np  ! #phase
-
-  integer:: cond(100) 
+  integer:: cond(800) 
 
 !  double precision localv
-  real(8):: npf(maxp)
+  real(8):: npf(800)
   save ceq
 
   ierr=0
@@ -106,7 +118,6 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
         elenames(i)=trim(local_char(string_index(1):string_index(2)))
 
         i=i+1
-
         string_index(1)=string_index(2)+1 
         string_index(2)=string_index(1)+SCAN(local_char(string_index(1):),' ')-1
       end do
@@ -157,12 +168,12 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
       local_char=' '
       local_char=trim(char_var)
 
-      do i=1,ntup
+      !do i=1,ntup
         call tqgpi(local_int(1),local_char,ceq)
         if(gx%bmperr.ne.0) goto 900
 
-        char_out(i)=phasenames(i)(1:len_trim(phasenames(i)))
-      end do
+        !char_out(i)=phasenames(i)(1:len_trim(phasenames(i)))
+      !end do
 
       int_out(1)=local_int(1)
 
@@ -170,19 +181,19 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
     case('setc') ! set condition
       local_char=char_var(1:len_trim(char_var))
       local_double(1)=double_var(1)
-      i=int_var(1)
-      j=int_var(2)
+      local_int(1)=int_var(1)
+      local_int(2)=int_var(2)
 
-      call tqsetc(local_char,i,j,local_double(1),cond(1),ceq)
+      call tqsetc(local_char,local_int(1),local_int(2),local_double(1),cond(1),ceq)
       if(gx%bmperr.ne.0) goto 900
 
 !-------------------------------------------
     case('ce') ! calculate equilibrium
-      i=int_var(1)    ! i=0 means call grid minimizer
-      j=int_var(2)
+      local_int(1)=int_var(1)    ! i=0 means call grid minimizer
+      local_int(2)=int_var(2)
       local_char=' '
       local_double(1)=0.
-      call tqce(local_char,i,j,local_double(1),ceq)
+      call tqce(local_char,local_int(1),local_int(2),local_double(1),ceq)
       if(gx%bmperr.ne.0) goto 900
 
 !-------------------------------------------
@@ -190,13 +201,67 @@ integer function pytq(call_func,int_var,double_var,char_var,int_out,double_out,c
       local_char=' '
       local_char=trim(char_var)
 
-      i=int_var(1)
-      j=int_var(2)
-      k=size(npf)
-      call tqgetv(local_char,i,j,k,npf,ceq)
+      local_int(1)=int_var(1)
+      local_int(2)=int_var(2)
+      local_int(3)=size(npf)
+      call tqgetv(local_char,local_int(1),local_int(2),local_int(3),npf,ceq)
       if(gx%bmperr.ne.0) goto 900
 
       double_out=npf
+
+!-------------------------------------------
+    case('gphc')
+      local_int(1)=int_var(1)   !(input) phase tuple index
+      !(output) no_sublatice: number of sublattices (1 if no sublattices)
+      !(output) no_ele_sublatice: number element in sublatice
+      !(output) ele_index: index of the elements
+      !(output) comp_sublatice: chemical composition in sublattice
+      !(output) no_sites: number sites of sublatice
+      !(output) extra_info: 2 extra information
+
+      call tqgphc1(local_int(1),no_sublatice,no_ele_sublatice,ele_index,comp_sublatice,no_sites,extra_info,ceq)
+      if(gx%bmperr.ne.0) goto 900
+
+      int_out(1)=no_sublatice
+
+      nc=0
+      do i=1,no_sublatice
+        nc=nc+no_ele_sublatice(i)
+      end do
+!      int_out(2)=nc
+
+      int_out(2:1+no_sublatice)=no_ele_sublatice(1:no_sublatice)
+      int_out(2+no_sublatice:1+no_sublatice+nc)=ele_index(1:nc)
+
+      double_out(1:nc)=comp_sublatice(1:nc)
+      double_out(nc+1:nc+no_sublatice)=no_sites(1:no_sublatice)
+      double_out(nc+no_sublatice+1)=extra_info(1)
+      double_out(nc+no_sublatice+2)=extra_info(2)
+
+!print*, local_int(1),no_sublatice
+!print*, "size of composition array",nc
+!print*, "element in sublattice",no_ele_sublatice(1:no_sublatice)
+!print*, "element location",ele_index(1:nc)
+!print*, "composition in each sublattice",comp_sublatice(1:nc)
+!print*, "sites ",no_sites(1:no_sublatice)
+!print*, "extra",extra_info
+!print*, int_out(1:1+no_sublatice+nc)
+!print*, double_out(1:nc+no_sublatice+2)
+
+!-------------------------------------------
+    case('gdif')
+      local_int(1)=size(double_var)
+
+!print*, local_int(1)
+!print*, "GDIF",double_var(1),double_var(2)
+!print*, double_var(3:local_int(1))
+
+      call tqgdif(int_var(1),int_var(2),int_var(3),double_var(1),double_var(2),double_var(3:local_int(1)),diffusivity,ceq)
+
+      double_out(1)=diffusivity
+
+
+
 !--------------------------------------------
     case('reset') ! reset error vcode
       gx%bmperr=0

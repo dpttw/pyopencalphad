@@ -3,7 +3,7 @@ path2=tqfunc.F90
 path3=tqfunc_prog.F90
 
 all:
-	mpirun -np 10 python paraexam.py
+	mpirun -np 3 python parallel_feni.py
 
 single:
 	clear
@@ -12,23 +12,26 @@ single:
 
 getoc:
 	git clone https://github.com/sundmanbo/opencalphad.git ../oc
-	cd ../oc && git checkout -b pyoc 0c28b3f
+	cd ../oc && git checkout -b version3-final 3c407d376769
 	cp Makefileoc ../oc/Makefile
 	cd ../oc && make
 	cp ../oc/liboceq.a ../oc/liboceqplus.mod .
-	gfortran -c -fPIC liboctq.F90
 
 oc:
 	clear
 	cd ../oc && make clean
 	cd ../oc && make
 	cp ../oc/liboceq.a ../oc/liboceqplus.mod .
-	gfortran -c -fPIC liboctq.F90
+
+compoc:
+	cd ../oc && make
+	cp ../oc/liboceq.a ../oc/liboceqplus.mod .
 
 interface:
+	gfortran -c -fPIC liboctq.F90
 	f2py -c --fcompiler=gnu95 --f90flags=-fPIC liboctq.o liboceq.a -m liboctqpy liboctqpy.f90
 	#gfortran -shared -O2 liboctqpy.f90 -o liboctqpy.so -fPIC
-	#gfortran -c -fPIC liboctqpy.so liboctqpy.f90	
+	#gfortran -c -fPIC liboctqpy.so liboctqpy.f90
 
 example:
-	f2py -c --fcompiler=gnu95 --f90flags=-fPIC liboctq.o liboceq.a -m tqfunc $(path2) 
+	f2py -c --fcompiler=gnu95 --f90flags=-fPIC liboctq.o liboceq.a -m tqfunc $(path2)
